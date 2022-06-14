@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Inventory Counting</string>
+    <string name="yes">Tak</string>
+    <string name="no">Nie</string>
+    <string name="ok">OK</string>
+    <string name="reload_scans">Załaduj skany</string>
+    <string name="in_C5">W C5?</string>
+    <string name="clear">Wyczyść</string>
+    <string name="save">Zapisz</string>
+</resources>
