@@ -112,7 +112,7 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
     private fun onResult(result: List<CountingData>){
         adapter.notifyItemRangeRemoved(0, countings.size)
         countings.clear()
-        countings.addAll(result)
+        countings.addAll(result.sortedByDescending { it.countingDate })
         adapter.notifyItemRangeInserted(0, result.size)
     }
 
