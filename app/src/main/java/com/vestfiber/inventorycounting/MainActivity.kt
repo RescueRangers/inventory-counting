@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
     private var scannedVfs: ArrayList<VfBatchNumber> = arrayListOf()
     private var adapter = VfNumberAdapter(scannedVfs)
     private lateinit var recyclerView: RecyclerView
+    private lateinit var mediaPlayer: MediaPlayer
 
     companion object {
         const val PROFILE_NAME = "InventoryScanVF"
@@ -92,6 +93,8 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
         intentFilter.addCategory(DWInterface.DATAWEDGE_RETURN_CATEGORY)
         intentFilter.addAction(PROFILE_INTENT_ACTION)
         registerReceiver(receiver, intentFilter)
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.wrong)
     }
 
     private fun getLoadedVfs() {
@@ -179,6 +182,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
             val currentVf = VfBatchNumber(scanData!!, countingId, date)
 //            if (scannedVfs.map { it.vfNumber }.contains(scanData))
             if (vfs.contains(currentVf)) currentVf.inC5 = true
+            else mediaPlayer.start()
             scannedVfs.add(0, currentVf)
             adapter.notifyItemInserted(0)
             recyclerView.scrollToPosition(0)
