@@ -43,7 +43,7 @@ class CountingAdapter(private val items: List<CountingData>, var onItemClick: ((
             }
         }
         fun bind(item: CountingData) {
-            val dateFormatter = SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH)
+            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
 
             date.text = dateFormatter.format(item.countingDate)
         }
