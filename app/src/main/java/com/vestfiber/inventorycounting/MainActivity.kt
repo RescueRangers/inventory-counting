@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
         intentFilter.addAction(PROFILE_INTENT_ACTION)
         registerReceiver(receiver, intentFilter)
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.wrong)
+        mediaPlayer = MediaPlayer.create(this, R.raw.fart)
     }
 
     private fun getLoadedVfs() {
