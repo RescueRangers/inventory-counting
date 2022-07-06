@@ -10,7 +10,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-class CountingAdapter(private val items: List<CountingData>, var onItemClick: ((CountingData) -> Unit)? = null):
+class CountingAdapter(private val items: List<CountingData>,
+                      private val onCountingListener: ViewHolder.OnCountingListener
+):
     RecyclerView.Adapter<CountingAdapter.ViewHolder>() {
 
     interface OnClickListener {
@@ -20,7 +22,7 @@ class CountingAdapter(private val items: List<CountingData>, var onItemClick: ((
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.countings_layout, parent, false)
 
-        return ViewHolder(view)
+        return ViewHolder(view, onCountingListener)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -32,18 +34,26 @@ class CountingAdapter(private val items: List<CountingData>, var onItemClick: ((
         return items.size
     }
 
-    inner class ViewHolder(itemView: View) :
-        RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View,
+                     private val onCountingListener: OnCountingListener) :
+        RecyclerView.ViewHolder(itemView), View.OnClickListener {
         private val date = itemView.findViewById<TextView>(R.id.scanTextView)
         init {
-            itemView.setOnClickListener {
-                onItemClick?.invoke(items[absoluteAdapterPosition])
-            }
+            itemView.setOnClickListener (this)
         }
+
+        interface OnCountingListener{
+            fun onCountingClick(position: Int)
+        }
+
         fun bind(item: CountingData) {
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
 
             date.text = dateFormatter.format(item.countingDate)
+        }
+
+        override fun onClick(v: View?) {
+            onCountingListener.onCountingClick(absoluteAdapterPosition)
         }
     }
 

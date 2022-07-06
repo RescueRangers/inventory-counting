@@ -23,7 +23,8 @@ class VfNumberAdapter(private val mList: List<ScannedObject>,
         return ViewHolder(view, onBatchListener)
     }
 
-    class ViewHolder(ItemView: View, private val onBatchListener: OnBatchListener)
+    class ViewHolder(ItemView: View,
+                     private val onBatchListener: OnBatchListener)
         : RecyclerView.ViewHolder(ItemView), View.OnClickListener {
         private val vfNumber: TextView = itemView.findViewById(R.id.vfNumberTextView)
         private val notOkIcon: ImageView = itemView.findViewById(R.id.notOkIcon)

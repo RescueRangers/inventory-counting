@@ -28,10 +28,11 @@ import java.util.*
 
 const val EXTRA_MESSAGE = "com.vestfiber.inventorycounting.COUNTING"
 
-class CountingsActivity : AppCompatActivity(), View.OnClickListener {
+class CountingsActivity : AppCompatActivity(), View.OnClickListener
+    , CountingAdapter.ViewHolder.OnCountingListener {
 
     private var countings: ArrayList<CountingData> = arrayListOf()
-    private var adapter = CountingAdapter(countings)
+    private var adapter = CountingAdapter(countings, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,9 +41,7 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
         val recyclerView = findViewById<RecyclerView>(R.id.countingsRecycler)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
-        adapter.onItemClick = { counting ->
-            countingClick(counting)
-        }
+
         val reloadButton = findViewById<Button>(R.id.reloadButton)
         reloadButton.setOnClickListener(this)
         getCountings()
@@ -94,7 +93,43 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
         snackBarView.show()
     }
 
-    private fun countingClick(counting: CountingData){
+//    private fun countingClick(counting: CountingData){
+//        val dialog = Dialog(this, com.google.android.material.R.style.Theme_AppCompat_Dialog)
+//        dialog.setContentView(R.layout.counting_dialog_layout)
+//        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+//        val textView = dialog.findViewById<TextView>(R.id.text_dialog)
+//        textView.text = getString(R.string.open_counting, dateFormatter.format(counting.countingDate))
+//        val posButton = dialog.findViewById<Button>(R.id.btn_dialog_pos)
+//        posButton.setOnClickListener {
+//            val message = counting.id
+//            val intent = Intent(this, MainActivity::class.java).apply {
+//                putExtra(EXTRA_MESSAGE, message)
+//            }
+//            dialog.dismiss()
+//            startActivity(intent)
+//        }
+//        val negButton = dialog.findViewById<Button>(R.id.btn_dialog_neg)
+//        negButton.setOnClickListener { dialog.dismiss() }
+//        dialog.show()
+//    }
+
+    private fun onResult(result: List<CountingData>){
+        adapter.notifyItemRangeRemoved(0, countings.size)
+        countings.clear()
+        countings.addAll(result.sortedByDescending { it.countingDate })
+        adapter.notifyItemRangeInserted(0, result.size)
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id){
+            R.id.reloadButton ->{
+                getCountings()
+            }
+        }
+    }
+
+    override fun onCountingClick(position: Int) {
+        val counting = countings[position]
         val dialog = Dialog(this, com.google.android.material.R.style.Theme_AppCompat_Dialog)
         dialog.setContentView(R.layout.counting_dialog_layout)
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
@@ -112,21 +147,6 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
         val negButton = dialog.findViewById<Button>(R.id.btn_dialog_neg)
         negButton.setOnClickListener { dialog.dismiss() }
         dialog.show()
-    }
-
-    private fun onResult(result: List<CountingData>){
-        adapter.notifyItemRangeRemoved(0, countings.size)
-        countings.clear()
-        countings.addAll(result.sortedByDescending { it.countingDate })
-        adapter.notifyItemRangeInserted(0, result.size)
-    }
-
-    override fun onClick(v: View?) {
-        when (v?.id){
-            R.id.reloadButton ->{
-                getCountings()
-            }
-        }
     }
 
 
