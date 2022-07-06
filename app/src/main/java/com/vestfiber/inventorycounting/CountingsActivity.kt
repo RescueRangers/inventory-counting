@@ -1,6 +1,6 @@
 package com.vestfiber.inventorycounting
 
-import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -95,11 +95,13 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun countingClick(counting: CountingData){
-        val builder = AlertDialog.Builder(this)
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH)
-        builder.setTitle("Otworzyć liczenie?")
-        builder.setMessage("Czy otworzyć liczenie z ${dateFormatter.format(counting.countingDate)}")
-        builder.setPositiveButton(R.string.yes) { dialog, _ ->
+        val dialog = Dialog(this, com.google.android.material.R.style.Theme_AppCompat_Dialog)
+        dialog.setContentView(R.layout.counting_dialog_layout)
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+        val textView = dialog.findViewById<TextView>(R.id.text_dialog)
+        textView.text = getString(R.string.open_counting, dateFormatter.format(counting.countingDate))
+        val posButton = dialog.findViewById<Button>(R.id.btn_dialog_pos)
+        posButton.setOnClickListener {
             val message = counting.id
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra(EXTRA_MESSAGE, message)
@@ -107,10 +109,9 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
             dialog.dismiss()
             startActivity(intent)
         }
-        builder.setNegativeButton(R.string.no) { dialog, _ ->
-            dialog.dismiss()
-        }
-        builder.show()
+        val negButton = dialog.findViewById<Button>(R.id.btn_dialog_neg)
+        negButton.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     private fun onResult(result: List<CountingData>){
