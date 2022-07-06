@@ -7,4 +7,7 @@
     <string name="in_C5">W C5?</string>
     <string name="clear">Wyczyść</string>
     <string name="save">Zapisz</string>
+    <string name="cancel">Anuluj</string>
+    <string name="counting_icon_cd">Counting icon</string>
+    <string name="open_counting">Czy otworzyć liczenie z %1$s</string>
 </resources>
