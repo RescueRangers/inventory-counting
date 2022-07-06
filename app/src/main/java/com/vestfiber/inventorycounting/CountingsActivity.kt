@@ -66,7 +66,10 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun onSuccess() {
-        val snackBarView = Snackbar.make(this.window.decorView.rootView, "Załadowane dane z serwera" , Snackbar.LENGTH_LONG)
+        val snackBarView = Snackbar
+            .make(this.window.decorView.rootView,
+                "Załadowane dane z serwera",
+                Snackbar.LENGTH_LONG)
         val view = snackBarView.view
         val params = view.layoutParams as FrameLayout.LayoutParams
         params.gravity = Gravity.TOP
@@ -77,7 +80,8 @@ class CountingsActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun onError(exception: String) {
-        val snackBarView = Snackbar.make(this.window.decorView.rootView, exception , Snackbar.LENGTH_LONG)
+        val snackBarView = Snackbar
+            .make(this.window.decorView.rootView, exception , Snackbar.LENGTH_LONG)
         val view = snackBarView.view
         val params = view.layoutParams as FrameLayout.LayoutParams
         val tv = view.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView

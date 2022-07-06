@@ -28,8 +28,6 @@ class CountingAdapter(private val items: List<CountingData>, var onItemClick: ((
         holder.bind(item)
     }
 
-
-
     override fun getItemCount(): Int {
         return items.size
     }
