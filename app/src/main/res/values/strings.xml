@@ -10,4 +10,5 @@
     <string name="cancel">Anuluj</string>
     <string name="counting_icon_cd">Counting icon</string>
     <string name="open_counting">Czy otworzyć liczenie z %1$s</string>
+    <string name="not_ok_description">Icon representing that the item is not OK</string>
 </resources>

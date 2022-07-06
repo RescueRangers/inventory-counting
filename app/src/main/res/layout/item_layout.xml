@@ -20,12 +20,14 @@
             android:textStyle="bold"
             tools:text="@tools:sample/cities" />
 
-        <TextView
-            android:id="@+id/scanDateTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
+        <ImageView
+            android:id="@+id/notOkIcon"
+            android:contentDescription="@string/not_ok_description"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_marginEnd="5sp"
+            android:src="@drawable/cross"
+            android:visibility="invisible"
             android:layout_gravity="end"
             android:textColor="#000"
             tools:text="@tools:sample/date/ddmmyy" />

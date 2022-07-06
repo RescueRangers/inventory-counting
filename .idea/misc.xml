@@ -7,11 +7,13 @@
         <entry key="..\:/InventoryCounting/app/src/main/res/drawable/border.xml" value="0.196" />
         <entry key="..\:/InventoryCounting/app/src/main/res/drawable/error_snack.xml" value="0.196" />
         <entry key="..\:/InventoryCounting/app/src/main/res/drawable/ic_launcher_background.xml" value="0.196" />
+        <entry key="..\:/InventoryCounting/app/src/main/res/drawable/test.xml" value="0.2985" />
         <entry key="..\:/InventoryCounting/app/src/main/res/layout/activity_countings.xml" value="0.22" />
         <entry key="..\:/InventoryCounting/app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="..\:/InventoryCounting/app/src/main/res/layout/activity_years_and_years.xml" value="0.18802083333333333" />
         <entry key="..\:/InventoryCounting/app/src/main/res/layout/countings_layout.xml" value="0.67" />
-        <entry key="..\:/InventoryCounting/app/src/main/res/layout/item_layout.xml" value="0.67" />
+        <entry key="..\:/InventoryCounting/app/src/main/res/layout/dialog_layout.xml" value="0.14895833333333333" />
+        <entry key="..\:/InventoryCounting/app/src/main/res/layout/item_layout.xml" value="0.33" />
         <entry key="..\:/InventoryCounting/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.196" />
         <entry key="..\:/InventoryCounting/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.196" />
       </map>

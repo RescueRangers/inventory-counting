@@ -16,6 +16,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -33,7 +34,8 @@ import java.io.ObjectOutputStream
 import java.util.*
 import com.vestfiber.inventorycounting.DAL.Result
 
-class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
+class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
+    VfNumberAdapter.ViewHolder.OnBatchListener {
 
     private var vfs: List<VfBatchNumber> = arrayListOf()
     private var version65OrOver = false
@@ -42,8 +44,8 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
     private val observableObject = ObservableObject
     private var countingId = 0
     private var initialized = false
-    private var scannedVfs: ArrayList<VfBatchNumber> = arrayListOf()
-    private var adapter = VfNumberAdapter(scannedVfs)
+    private var scannedObjects: ArrayList<ScannedObject> = arrayListOf()
+    private var adapter = VfNumberAdapter(scannedObjects, this)
     private lateinit var recyclerView: RecyclerView
     private lateinit var mediaPlayer: MediaPlayer
 
@@ -58,7 +60,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        recyclerView = findViewById<RecyclerView>(R.id.recycler)
+        recyclerView = findViewById(R.id.recycler)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
@@ -173,20 +175,26 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
         if (intent?.hasExtra(DWInterface.DATAWEDGE_SCAN_EXTRA_DATA_STRING) == true) {
             //  Handle scan intent received from DataWedge, add it to the list of scans
             val scanData = intent.getStringExtra(DWInterface.DATAWEDGE_SCAN_EXTRA_DATA_STRING)
-            if ((scanData?.startsWith("VF", ignoreCase = true)) == false)
+            val isSame: (ScannedObject) -> Boolean = { it.Number == scanData }
+            if (scannedObjects.any { isSame(it) })
                 return
-            val isSame: (VfBatchNumber) -> Boolean = { it.vfNumber == scanData }
-            if (scannedVfs.any { isSame(it) })
-                return
-            val date = Calendar.getInstance().time
-            val currentVf = VfBatchNumber(scanData!!, countingId, date)
-//            if (scannedVfs.map { it.vfNumber }.contains(scanData))
-            if (vfs.contains(currentVf)) currentVf.inC5 = true
-            else mediaPlayer.start()
-            scannedVfs.add(0, currentVf)
-            adapter.notifyItemInserted(0)
-            recyclerView.scrollToPosition(0)
-//            toolbar.subtitle = "COC: ${cocs.size}"
+
+            if ((scanData?.startsWith("VF", ignoreCase = true)) == false) {
+                val currentCoc = CocData(countingId, scanData)
+                scannedObjects.add(0, currentCoc)
+                adapter.notifyItemInserted(0)
+                recyclerView.scrollToPosition(0)
+            }
+            else{
+                if (!scanData!!.isDigitsOnly())
+                    return
+                val currentVf = VfBatchNumber(scanData, countingId)
+                if (vfs.contains(currentVf)) currentVf.inC5 = true
+                else mediaPlayer.start()
+                scannedObjects.add(0, currentVf)
+                adapter.notifyItemInserted(0)
+                recyclerView.scrollToPosition(0)
+            }
         }
     }
 
@@ -264,7 +272,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
             val fileOut =
                 applicationContext.openFileOutput(HISTORY_FILE_NAME+countingId, Activity.MODE_PRIVATE)
             objectOut = ObjectOutputStream(fileOut)
-            objectOut.writeObject(scannedVfs)
+            objectOut.writeObject(scannedObjects)
             fileOut.fd.sync()
         } catch (e: IOException) {
             e.printStackTrace()
@@ -287,9 +295,9 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
             val fileIn = applicationContext.openFileInput(HISTORY_FILE_NAME+countingId)
             objectIn = ObjectInputStream(fileIn)
             @Suppress("UNCHECKED_CAST")
-            scannedVfs = objectIn.readObject() as ArrayList<VfBatchNumber>
+            scannedObjects = objectIn.readObject() as ArrayList<ScannedObject>
         } catch (e: FileNotFoundException) {
-            scannedVfs = arrayListOf()
+            scannedObjects = arrayListOf()
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: ClassNotFoundException) {
@@ -306,17 +314,17 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
 
             }
         }
-        adapter = VfNumberAdapter(scannedVfs)
+        adapter = VfNumberAdapter(scannedObjects, this)
         val recyclerView = findViewById<RecyclerView>(R.id.recycler)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
-        adapter.notifyItemRangeInserted(0, scannedVfs.size)
+        adapter.notifyItemRangeInserted(0, scannedObjects.size)
     }
 
     override fun onClick(v: View?) {
         when(v?.id){
             R.id.clearButton -> {
-                if (!scannedVfs.any()){
+                if (!scannedObjects.any()){
                     onError("Brak zeskanowanych VF")
                     return
                 }
@@ -324,7 +332,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
                 builder.setTitle("Na pewno usunąć?")
                 builder.setMessage("Czy na pewno usunąć wszystkie numery z listy?")
                 builder.setPositiveButton(R.string.yes) { dialog, _ ->
-                    clearScannedVfs()
+                    clearScannedObjects()
                     dialog.dismiss()
                 }
                 builder.setNegativeButton(R.string.no) { dialog, _ ->
@@ -333,23 +341,23 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
                 builder.show()
             }
             R.id.saveButton -> {
-                if (!scannedVfs.any()){
+                if (!scannedObjects.any()){
                     onError("Brak zeskanowanych VF")
                     return
                 }
 
-                saveScannedVfs()
+                saveScannedobjects()
             }
         }
     }
 
-    private fun saveScannedVfs() {
+    private fun saveScannedobjects() {
         lifecycleScope.launch{
-            val result = VfService().saveScannedVfs(scannedVfs)
+            val result = VfService().saveScannedObjects(scannedObjects)
             if (result is Result.Success<String>){
                 runOnUiThread {
                     onSuccess(result.data)
-                    clearScannedVfs()
+                    clearScannedObjects()
                 }
             }else if(result is Result.Error){
                 Log.e("Error: ", result.exception.message!!)
@@ -360,9 +368,62 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener {
         }
     }
 
-    private fun clearScannedVfs() {
-        adapter.notifyItemRangeRemoved(0, scannedVfs.size)
-        scannedVfs.clear()
+    private fun clearScannedObjects() {
+        adapter.notifyItemRangeRemoved(0, scannedObjects.size)
+        scannedObjects.clear()
         writeFile()
+    }
+
+    override fun onBatchClick(position: Int) {
+        val scanned = scannedObjects[position]
+
+        if (scanned is VfBatchNumber){
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Co zrobić z numerem?")
+            builder.setMessage("Wybierz co zrobić.")
+
+            if(scanned.notOK){
+                builder.setPositiveButton("Oznacz jako OK") {dialog, _ ->
+                    scanned.notOK = false
+                    adapter.notifyItemChanged(position)
+                    dialog.dismiss()
+                }
+            }
+            else{
+                builder.setPositiveButton("Oznacz jako błedne") {dialog, _ ->
+                    scanned.notOK = true
+                    adapter.notifyItemChanged(position)
+                    dialog.dismiss()
+                }
+            }
+
+            builder.setNegativeButton("Usuń"){dialog, _ ->
+                scannedObjects.removeAt(position)
+                adapter.notifyItemRemoved(position)
+                dialog.dismiss()
+            }
+
+            builder.setNeutralButton("Anuluj"){dialog, _ ->
+                dialog.dismiss()
+            }
+            builder.show()
+        }
+        else if(scanned is CocData){
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Co zrobić z COC?")
+            builder.setMessage("Wybierz co zrobić.")
+
+            builder.setPositiveButton("Usuń") {dialog, _ ->
+                scannedObjects.removeAt(position)
+                adapter.notifyItemRemoved(position)
+                dialog.dismiss()
+            }
+
+            builder.setNegativeButton("Anuluj"){dialog, _ ->
+                dialog.dismiss()
+            }
+
+            builder.show()
+        }
     }
 }
