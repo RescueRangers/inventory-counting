@@ -179,19 +179,20 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
             if (scannedObjects.any { isSame(it) })
                 return
 
-            if ((scanData?.startsWith("VF", ignoreCase = true)) == false) {
-                val currentCoc = CocData(countingId, scanData)
-                scannedObjects.add(0, currentCoc)
-                adapter.notifyItemInserted(0)
-                recyclerView.scrollToPosition(0)
-            }
-            else{
-                if (!scanData!!.isDigitsOnly())
-                    return
+            if ((scanData?.startsWith("VF", ignoreCase = true)) == true) {
                 val currentVf = VfBatchNumber(scanData, countingId)
                 if (vfs.contains(currentVf)) currentVf.inC5 = true
                 else mediaPlayer.start()
                 scannedObjects.add(0, currentVf)
+                adapter.notifyItemInserted(0)
+                recyclerView.scrollToPosition(0)
+
+            }
+            else{
+                if (!scanData!!.isDigitsOnly())
+                    return
+                val currentCoc = CocData(countingId, scanData)
+                scannedObjects.add(0, currentCoc)
                 adapter.notifyItemInserted(0)
                 recyclerView.scrollToPosition(0)
             }
