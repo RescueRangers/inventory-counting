@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.media.MediaPlayer
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -52,7 +53,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
     companion object {
         const val PROFILE_NAME = "InventoryScanVF"
         const val PROFILE_INTENT_ACTION = "com.vestfiber.inventorycounting.SCAN"
-        const val PROFILE_INTENT_START_ACTIVITY = "0"
+        const val PROFILE_INTENT_START_ACTIVITY = "2"
         const val HISTORY_FILE_NAME = "VF_Inventory_"
     }
 
@@ -96,6 +97,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
         intentFilter.addAction(PROFILE_INTENT_ACTION)
         registerReceiver(receiver, intentFilter)
 
+        createDataWedgeProfile()
         mediaPlayer = MediaPlayer.create(this, R.raw.fart)
     }
 
@@ -202,11 +204,35 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
     private fun createDataWedgeProfile() {
         //  Create and configure the DataWedge profile associated with this application
         //  For readability's sake, I have not defined each of the keys in the DWInterface file
+        val profileConfig = configureProfileSettings()
+        configureBarcodeInput(profileConfig)
+        dwInterface.sendCommandBundle(this, DWInterface.DATAWEDGE_SEND_SET_CONFIG, profileConfig)
+
+        configureIntentOutput(profileConfig)
+
+        disableKeyboardOutput(profileConfig)
+    }
+
+    private fun configureProfileSettings(): Bundle {
         dwInterface.sendCommandString(this, DWInterface.DATAWEDGE_SEND_CREATE_PROFILE, PROFILE_NAME)
         val profileConfig = Bundle()
         profileConfig.putString("PROFILE_NAME", PROFILE_NAME)
         profileConfig.putString("PROFILE_ENABLED", "true") //  These are all strings
         profileConfig.putString("CONFIG_MODE", "UPDATE")
+        val appConfig = Bundle()
+        appConfig.putString(
+            "PACKAGE_NAME",
+            packageName
+        )      //  Associate the profile with this app
+        appConfig.putStringArray(
+            "ACTIVITY_LIST",
+            arrayOf("com.vestfiber.inventorycounting.MainActivity")
+        )
+        profileConfig.putParcelableArray("APP_LIST", arrayOf(appConfig))
+        return profileConfig
+    }
+
+    private fun configureBarcodeInput(profileConfig: Bundle) {
         val barcodeConfig = Bundle()
         barcodeConfig.putString("PLUGIN_NAME", "BARCODE")
         barcodeConfig.putString(
@@ -216,14 +242,9 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
         val barcodeProps = Bundle()
         barcodeConfig.putBundle("PARAM_LIST", barcodeProps)
         profileConfig.putBundle("PLUGIN_CONFIG", barcodeConfig)
-        val appConfig = Bundle()
-        appConfig.putString(
-            "PACKAGE_NAME",
-            packageName
-        )      //  Associate the profile with this app
-        appConfig.putStringArray("ACTIVITY_LIST", arrayOf("com.vestfiber.inventorycounting.MainActivity"))
-        profileConfig.putParcelableArray("APP_LIST", arrayOf(appConfig))
-        dwInterface.sendCommandBundle(this, DWInterface.DATAWEDGE_SEND_SET_CONFIG, profileConfig)
+    }
+
+    private fun configureIntentOutput(profileConfig: Bundle) {
         //  You can only configure one plugin at a time in some versions of DW, now do the intent output
         profileConfig.remove("PLUGIN_CONFIG")
         val intentConfig = Bundle()
@@ -232,9 +253,22 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
         val intentProps = Bundle()
         intentProps.putString("intent_output_enabled", "true")
         intentProps.putString("intent_action", PROFILE_INTENT_ACTION)
-        intentProps.putString("intent_delivery", PROFILE_INTENT_START_ACTIVITY)  //  "0"
+        intentProps.putString("intent_delivery", PROFILE_INTENT_START_ACTIVITY)
         intentConfig.putBundle("PARAM_LIST", intentProps)
         profileConfig.putBundle("PLUGIN_CONFIG", intentConfig)
+        dwInterface.sendCommandBundle(this, DWInterface.DATAWEDGE_SEND_SET_CONFIG, profileConfig)
+    }
+
+    private fun disableKeyboardOutput(profileConfig: Bundle) {
+        //  Disable keyboard output
+        profileConfig.remove("PLUGIN_CONFIG")
+        val keystrokeConfig = Bundle()
+        keystrokeConfig.putString("PLUGIN_NAME", "KEYSTROKE")
+        keystrokeConfig.putString("RESET_CONFIG", "true")
+        val keystrokeProps = Bundle()
+        keystrokeProps.putString("keystroke_output_enabled", "false")
+        keystrokeConfig.putBundle("PARAM_LIST", keystrokeProps)
+        profileConfig.putBundle("PLUGIN_CONFIG", keystrokeConfig)
         dwInterface.sendCommandBundle(this, DWInterface.DATAWEDGE_SEND_SET_CONFIG, profileConfig)
     }
 
