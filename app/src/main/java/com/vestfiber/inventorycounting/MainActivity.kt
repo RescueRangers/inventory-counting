@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity(), Observer, View.OnClickListener,
 
             }
             else{
-                if (!scanData!!.isDigitsOnly())
+                if (!scanData!!.isDigitsOnly() || scanData.length > 7)
                     return
                 val currentCoc = CocData(countingId, scanData)
                 scannedObjects.add(0, currentCoc)
